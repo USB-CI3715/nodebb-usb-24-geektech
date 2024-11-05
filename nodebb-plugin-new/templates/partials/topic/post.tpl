@@ -24,7 +24,11 @@
 				</a>
 			</div>
 
-			<a class="fw-bold text-nowrap" href="{{{ if ./user.userslug }}}{config.relative_path}/user/{./user.userslug}{{{ else }}}#{{{ end }}}" data-username="{posts.user.username}" data-uid="{posts.user.uid}">{posts.user.displayname}</a>
+			<a class="fw-bold text-nowrap" href="{{{ if ./user.userslug }}}{config.relative_path}/user/{./user.userslug}{{{ else }}}#{{{ end }}}" data-username="{posts.user.username}" data-uid="{posts.user.uid}">
+				{posts.user.displayname}
+				<span class="badge bg-secondary ms-1">{posts.user.rol}</span>
+			</a>
+
 
 			{{{ each posts.user.selectedGroups }}}
 			{{{ if posts.user.selectedGroups.slug }}}
