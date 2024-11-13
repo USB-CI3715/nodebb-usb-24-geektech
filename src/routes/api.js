@@ -11,7 +11,7 @@ module.exports = function (app, middleware, controllers) {
 	app.use('/api', router);
 
 	router.get('/config', [...middlewares, middleware.applyCSRF], helpers.tryRoute(controllers.api.getConfig));
-	router.patch('/posts/:pid/answered', [], helpers.tryRoute(controllers.posts.updateAnsweredStatus));
+	router.patch('/posts/:pid/answered', [...middlewares], helpers.tryRoute(controllers.posts.updateAnsweredStatus));
 
 	router.get('/self', [...middlewares], helpers.tryRoute(controllers.user.getCurrentUser));
 	router.get('/user/uid/:uid', [...middlewares, middleware.canViewUsers], helpers.tryRoute(controllers.user.getUserByUID));
