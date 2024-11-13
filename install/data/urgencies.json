@@ -1,6 +1,6 @@
 [
     {
-        "name": "No Priority",
+        "name": "No urgency",
         "description": "Issues that need attention but are not urgent",
         "descriptionParsed": "<p>Issues that need attention but are not urgent</p>\n",
         "bgColor": "#86ba4b",
@@ -9,7 +9,7 @@
         "order": 1
     },
     {
-        "name": "High Priority",
+        "name": "High",
         "description": "High priority issues that need immediate attention",
         "descriptionParsed": "<p>High priority issues that need immediate attention</p>\n",
         "bgColor": "#e95c5a",
@@ -18,7 +18,7 @@
         "order": 2
     },
     {
-        "name": "Medium Priority",
+        "name": "Medium",
         "description": "Medium priority issues that need attention",
         "descriptionParsed": "<p>Medium priority issues that need attention</p>\n",
         "bgColor": "#fda34b",
@@ -27,7 +27,7 @@
         "order": 3
     },
     {
-        "name": "Low Priority",
+        "name": "Low",
         "description": "Low priority issues that need attention",
         "descriptionParsed": "<p>Low priority issues that need attention</p>\n",
         "bgColor": "#59b3d0",
