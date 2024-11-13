@@ -159,34 +159,6 @@ postsAPI.edit = async function (caller, data) {
 	return returnData;
 };
 
-postsAPI.editAnswered = async function (caller, data) {
-	if (!data || !data.pid) {
-		throw new Error('[[error:invalid-data]]');
-	}
-	const tid = await posts.getPostField(data.pid, 'tid');
-	const canEdit = await privileges.categories.can('topics:write', tid, caller.uid);
-	if (!canEdit) {
-		throw new Error('[[error:no-privileges]]');
-	}
-
-	const req = apiHelpers.buildReqObject(caller);
-
-	const postData = await posts.editAnswered({ pid: data.pid, answered: data.answered, uid: caller.uid, req });
-
-	const topicData = await topics.getTopicFields(tid, ['title']);
-	await events.log({
-		type: 'post-edit',
-		uid: caller.uid,
-		ip: caller.ip,
-		pid: data.pid,
-		tid: tid,
-		title: topicData.title,
-		answered: data.answered,
-	});
-
-	return postData;
-};
-
 postsAPI.delete = async function (caller, data) {
 	await deleteOrRestore(caller, data, {
 		command: 'delete',

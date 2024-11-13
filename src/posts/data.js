@@ -41,7 +41,7 @@ module.exports = function (Posts) {
 		 * @returns {string} True if the post has been answered, false otherwise.
 		 */
 		const post = await Posts.getPostFields(pid, ['answered']);
-		return post ? post.answered : false;
+		return post ? post.answered : 0;
 	};
 
 	Posts.getPostsData = async function (pids) {

@@ -222,10 +222,10 @@ Posts.toggleAnswered = async (req, res) => {
 	// Get the current answered status of the post
 	const answeredStatus = await posts.getAnsweredStatus(req.params.pid);
 	// Toggle the answered status
-	if (answeredStatus === 'false') {
-		await posts.setPostField(req.params.pid, 'answered', true);
+	if (answeredStatus === 0) {
+		await posts.setPostField(req.params.pid, 'answered', 1);
 	} else {
-		await posts.setPostField(req.params.pid, 'answered', false);
+		await posts.setPostField(req.params.pid, 'answered', 0);
 	}
 
 	// Get the new answered status
