@@ -37,3 +37,28 @@ postsController.getRecentPosts = async function (req, res) {
 	const data = await posts.getRecentPosts(req.uid, start, stop, req.params.term);
 	res.json(data);
 };
+
+postsController.updateAnsweredStatus = async function (req, res) {
+    try {
+        const { pid } = req.params;
+        const { answered } = req.body;
+        const uid = req.uid;
+
+        const post = await posts.getPostData(pid);
+        if (!post) {
+            return res.status(404).json({ error: 'Post no encontrado' });
+        }
+
+        const canEdit = await privileges.posts.canEdit(pid, uid);
+        if (!canEdit.flag) {
+            return res.status(403).json({ error: 'No tienes permiso para modificar este post' });
+        }
+
+        await posts.setAnsweredStatus(pid, answered);
+
+        res.status(200).json({ message: 'Estado de respuesta actualizado', answered });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+};

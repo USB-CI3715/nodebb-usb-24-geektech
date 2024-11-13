@@ -8,7 +8,7 @@ const utils = require('../utils');
 const intFields = [
 	'uid', 'pid', 'tid', 'deleted', 'timestamp',
 	'upvotes', 'downvotes', 'deleterUid', 'edited',
-	'replies', 'bookmarks',
+	'replies', 'bookmarks', 'answered'
 ];
 
 module.exports = function (Posts) {
@@ -57,6 +57,10 @@ module.exports = function (Posts) {
 		await db.setObject(`post:${pid}`, data);
 		plugins.hooks.fire('action:post.setFields', { data: { ...data, pid } });
 	};
+	
+	Posts.setAnsweredStatus = async function (pid, answered) {
+		await Posts.setPostField(pid, 'answered', answered);
+	};
 };
 
 function modifyPost(post, fields) {
@@ -70,6 +74,9 @@ function modifyPost(post, fields) {
 		}
 		if (post.hasOwnProperty('edited')) {
 			post.editedISO = post.edited !== 0 ? utils.toISOString(post.edited) : '';
+		}
+		if (post.hasOwnProperty('answered')) {
+			post.answered = !!post.answered;
 		}
 	}
 }
