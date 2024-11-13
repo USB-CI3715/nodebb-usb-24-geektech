@@ -24,7 +24,7 @@ module.exports = function () {
 	setupApiRoute(router, 'put', '/:pid/answered', middlewares, controllers.write.posts.editAnswered);
 
 	setupApiRoute(router, 'get', '/:uid/urgency', [], controllers.write.posts.getUrgentPosts);
-	setupApiRoute(router, 'get', '/:uid/unanswered', [], controllers.write.posts.getUnansweredUrgentPosts);
+	setupApiRoute(router, 'get', '/:uid/unanswered/:ans', [], controllers.write.posts.getUnansweredUrgentPosts);
 
 	setupApiRoute(router, 'get', '/:pid/index', [middleware.assert.post], controllers.write.posts.getIndex);
 	setupApiRoute(router, 'get', '/:pid/raw', [middleware.assert.post], controllers.write.posts.getRaw);

@@ -196,7 +196,9 @@ Posts.getUrgentPosts = async (req, res) => {
 };
 
 Posts.getUnansweredUrgentPosts = async (req, res) => {
-	const urgentPosts = await posts.getUnansweredUrgentPosts(req.uid);
+	const answered = parseInt(req.params.ans, 10);
+	console.log(answered);
+	const urgentPosts = await posts.getUnansweredUrgentPosts(req.uid, answered);
 	helpers.formatApiResponse(200, res, urgentPosts);
 };
 Posts.getAnsweredStatus = async (req, res) => {
