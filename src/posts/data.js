@@ -42,7 +42,7 @@ module.exports = function (Posts) {
 		 */
 		const post = await Posts.getPostFields(pid, ['answered']);
 		return post ? post.answered : false;
-	}
+	};
 
 	Posts.getPostsData = async function (pids) {
 		const posts = await Posts.getPostsFields(pids, []);
