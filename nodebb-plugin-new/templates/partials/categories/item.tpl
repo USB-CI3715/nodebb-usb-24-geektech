@@ -1,4 +1,4 @@
-<li component="categories/category" data-cid="{./cid}" class="w-100 border-bottom py-3 py-lg-4 gap-lg-0 gap-2 d-flex flex-column flex-lg-row align-items-start category-{./cid} {./unread-class}">
+<li component="categories/category" data-cid="{./cid}" data-order="{./order}" class="w-100 border-bottom py-3 py-lg-4 gap-lg-0 gap-2 d-flex flex-column flex-lg-row align-items-start category-{./cid} {./unread-class}">
 	<meta itemprop="name" content="{./name}">
 
 	<div class="d-flex col-lg-7 gap-2 gap-lg-3">

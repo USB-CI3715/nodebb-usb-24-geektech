@@ -6,7 +6,7 @@
         "bgColor": "#fda34b",
         "color": "#ffffff",
         "icon" : "fa-bullhorn",
-        "order": 1
+        "order": 2
     },
     {
         "name": "General Discussion",
@@ -15,7 +15,7 @@
         "bgColor": "#59b3d0",
         "color": "#ffffff",
         "icon" : "fa-comments-o",
-        "order": 2
+        "order": 3
     },
     {
         "name": "Blogs",
@@ -24,15 +24,24 @@
         "bgColor": "#86ba4b",
         "color": "#ffffff",
         "icon" : "fa-newspaper-o",
-        "order": 4
+        "order": 5
     },
     {
         "name": "Comments & Feedback",
         "description": "Got a question? Ask away!",
         "descriptionParsed": "<p>Got a question? Ask away!</p>\n",
-        "bgColor": "#e95c5a",
+        "bgColor": "#ffcc00",
         "color": "#ffffff",
         "icon" : "fa-question",
-        "order": 3
+        "order": 4
+    },
+    {
+        "name": "Urgent Questions",
+        "description": "Don't forget to check these posts",
+        "descriptionParsed": "<p>Don't forget to check these posts</p>\n",
+        "bgColor": "#e95c5a",
+        "color": "#ffffff",
+        "icon": "fa-clock-o",
+        "order": 1
     }
 ]
