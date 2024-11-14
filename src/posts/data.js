@@ -33,7 +33,7 @@ module.exports = function (Posts) {
 
 		const { uid } = posts[0];
 
-		const user = await db.getObjectFields(`user:${uid}`, ['uid', 'username', 'userslug', 'picture']);
+		const user = await db.getObjectFields(`user:${uid}`, ['uid', 'username', 'userslug', 'picture', 'rol', 'status', 'fullname']);
 
 		return urgency ? { ...posts[0], urgency, user, url: `/post/${pid}` } : null;
 	};
@@ -52,7 +52,7 @@ module.exports = function (Posts) {
 	Posts.getPostsData = async function (pids) {
 		const posts = await Posts.getPostsFields(pids, []);
 		const urgencies = await Promise.all(posts.map(post => getUrgencyById({ urg_id: post.urg_id })));
-		const users = await db.getObjectsFields(posts.map(post => `user:${post.uid}`), ['uid', 'username', 'userslug', 'picture']);
+		const users = await db.getObjectsFields(posts.map(post => `user:${post.uid}`), ['uid', 'username', 'userslug', 'picture', 'rol', 'status', 'fullname']);
 		return posts.map((post, index) => ({ ...post, urgency: urgencies[index], user: users[index], url: `/post/${post.pid}` }));
 	};
 
