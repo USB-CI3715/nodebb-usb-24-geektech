@@ -3,7 +3,7 @@
         "name": "No urgency",
         "description": "Issues that need attention but are not urgent",
         "descriptionParsed": "<p>Issues that need attention but are not urgent</p>\n",
-        "bgColor": "border border-info-subtle",
+        "classes": "border border-info-subtle bg-info",
         "icon" : "fa-exclamation-circle",
         "order": 1
     },
@@ -11,7 +11,7 @@
         "name": "High",
         "description": "High priority issues that need immediate attention",
         "descriptionParsed": "<p>High priority issues that need immediate attention</p>\n",
-        "bgColor": "border border-danger",
+        "classes": "border border-danger bg-danger",
         "icon" : "fa-exclamation-triangle",
         "order": 2
     },
@@ -19,7 +19,7 @@
         "name": "Medium",
         "description": "Medium priority issues that need attention",
         "descriptionParsed": "<p>Medium priority issues that need attention</p>\n",
-        "bgColor": "border border-warning",
+        "classes": "border border-warning bg-warning",
         "icon" : "fa-exclamation-circle",
         "order": 3
     },
@@ -27,7 +27,7 @@
         "name": "Low",
         "description": "Low priority issues that need attention",
         "descriptionParsed": "<p>Low priority issues that need attention</p>\n",
-        "bgColor": "border border-success",
+        "classes": "border border-success bg-success",
         "icon" : "fa-exclamation",
         "order": 4
     }
