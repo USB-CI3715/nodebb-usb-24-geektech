@@ -30,7 +30,12 @@ module.exports = function (Posts) {
 	Posts.getPostData = async function (pid) {
 		const posts = await Posts.getPostsFields([pid], []);
 		const urgency = posts && posts.length ? (await getUrgencyById({ urg_id: posts[0].urg_id })) : null;
-		return urgency ? { ...posts[0], urgency } : null;
+
+		const { uid } = posts[0];
+
+		const user = await db.getObjectFields(`user:${uid}`, ['uid', 'username', 'userslug', 'picture']);
+
+		return urgency ? { ...posts[0], urgency, user, url: `/post/${pid}` } : null;
 	};
 
 	Posts.getAnsweredStatus = async function (pid) {
@@ -47,7 +52,8 @@ module.exports = function (Posts) {
 	Posts.getPostsData = async function (pids) {
 		const posts = await Posts.getPostsFields(pids, []);
 		const urgencies = await Promise.all(posts.map(post => getUrgencyById({ urg_id: post.urg_id })));
-		return posts.map((post, index) => ({ ...post, urgency: urgencies[index] }));
+		const users = await db.getObjectsFields(posts.map(post => `user:${post.uid}`), ['uid', 'username', 'userslug', 'picture']);
+		return posts.map((post, index) => ({ ...post, urgency: urgencies[index], user: users[index], url: `/post/${post.pid}` }));
 	};
 
 	Posts.getPostField = async function (pid, field) {
