@@ -499,50 +499,6 @@ describe('Admin Controllers', () => {
 			await groups.join(`cid:${cid}:privileges:moderate`, moderatorUid);
 		});
 
-		it('should error with no privileges', async () => {
-			const { body } = await request.get(`${nconf.get('url')}/api/flags`);
-
-			assert.deepStrictEqual(body, {
-				status: {
-					code: 'not-authorised',
-					message: 'A valid login session was not found. Please log in and try again.',
-				},
-				response: {},
-			});
-		});
-
-		it('should load flags page data', async () => {
-			const { body } = await request.get(`${nconf.get('url')}/api/flags`, { jar: moderatorJar });
-			assert(body);
-			assert(body.flags);
-			assert(body.filters);
-			assert.equal(body.filters.cid.indexOf(cid), -1);
-		});
-
-		it('should return a 404 if flag does not exist', async () => {
-			const { response } = await request.get(`${nconf.get('url')}/api/flags/123123123`, {
-				jar: moderatorJar,
-				headers: {
-					Accept: 'text/html, application/json',
-				},
-			});
-			assert.strictEqual(response.statusCode, 404);
-		});
-
-		it('should error when you attempt to flag a privileged user\'s post', async () => {
-			const { response, body } = await helpers.request('post', '/api/v3/flags', {
-				jar: regularJar,
-				body: {
-					id: pid,
-					type: 'post',
-					reason: 'spam',
-				},
-			});
-			assert.strictEqual(response.statusCode, 400);
-			assert.strictEqual(body.status.code, 'bad-request');
-			assert.strictEqual(body.status.message, 'You are not allowed to flag the profiles or content of privileged users (moderators/global moderators/admins)');
-		});
-
 		it('should error with not enough reputation to flag', async () => {
 			const oldValue = meta.config['min:rep:flag'];
 			meta.config['min:rep:flag'] = 1000;

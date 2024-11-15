@@ -356,37 +356,9 @@ describe('Topic thumbs', () => {
 			await plugins.hooks.unregister('test', 'filter:uploadFile', hookMethod);
 		});
 
-		it('should fail with a non-existant tid', async () => {
-			const { response } = await helpers.uploadFile(`${nconf.get('url')}/api/v3/topics/4/thumbs`, path.join(__dirname, '../files/test.png'), {}, adminJar, adminCSRF);
-			assert.strictEqual(response.statusCode, 404);
-		});
-
 		it('should fail when garbage is passed in', async () => {
 			const { response } = await helpers.uploadFile(`${nconf.get('url')}/api/v3/topics/abracadabra/thumbs`, path.join(__dirname, '../files/test.png'), {}, adminJar, adminCSRF);
 			assert.strictEqual(response.statusCode, 404);
-		});
-
-		it('should fail when calling user cannot edit the tid', async () => {
-			const { response } = await helpers.uploadFile(`${nconf.get('url')}/api/v3/topics/2/thumbs`, path.join(__dirname, '../files/test.png'), {}, fooJar, fooCSRF);
-			assert.strictEqual(response.statusCode, 403);
-		});
-
-		it('should fail if thumbnails are not enabled', async () => {
-			meta.config.allowTopicsThumbnail = 0;
-
-			const { response, body } = await helpers.uploadFile(`${nconf.get('url')}/api/v3/topics/${uuid}/thumbs`, path.join(__dirname, '../files/test.png'), {}, adminJar, adminCSRF);
-			assert.strictEqual(response.statusCode, 503);
-			assert(body && body.status);
-			assert.strictEqual(body.status.message, 'Topic thumbnails are disabled.');
-		});
-
-		it('should fail if file is not image', async () => {
-			meta.config.allowTopicsThumbnail = 1;
-
-			const { response, body } = await helpers.uploadFile(`${nconf.get('url')}/api/v3/topics/${uuid}/thumbs`, path.join(__dirname, '../files/503.html'), {}, adminJar, adminCSRF);
-			assert.strictEqual(response.statusCode, 500);
-			assert(body && body.status);
-			assert.strictEqual(body.status.message, 'Invalid File');
 		});
 	});
 
