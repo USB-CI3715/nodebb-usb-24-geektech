@@ -2,141 +2,92 @@ PostObject:
   description: A single post in the array returned from `Posts.getPostSummaryByPids`
   type: object
   properties:
-    pid:
-      type: number
+    urg_id:
+      type: string
+      description: The urgency id of the post
+    uid:
+      type: integer
+      description: The user id of the post
+    answered:
+      type: integer
+      description: The status of the post if it has been answered or not (0 or 1)
+    timestamp:
+      type: integer
+      description: The timestamp of the post
+    editor:
+      type: string
+      description: The editor of the post
     tid:
-      type: number
-      description: A topic identifier
+      type: integer
+      description: The topic id of the post
     content:
       type: string
-    uid:
-      type: number
-      description: A user identifier
-    timestamp:
-      type: number
+      description: The content of the post
+    pid:
+      type: integer
+      description: The post id
+    edited:
+      type: integer
+      description: The timestamp of the post when it was edited
     deleted:
-      type: boolean
+      type: integer
+      description: The status of the post if it has been deleted or not (0 or 1)
     upvotes:
-      type: number
+      type: integer
+      description: The number of upvotes the post has
     downvotes:
-      type: number
+      type: integer
+      description: The number of downvotes the post has
+    deleterUid:
+      type: integer
+      description: The user id of the deleter
+    replies:
+      type: integer
+      description: The number of replies the post has
+    bookmarks:
+      type: integer
+      description: The number of bookmarks the post has
     votes:
-      type: number
+      type: integer
+      description: The number of votes the post has
     timestampISO:
       type: string
-      description: An ISO 8601 formatted date string (complementing `timestamp`)
+      description: The timestamp of the post in ISO format
+    editedISO:
+      type: string
+      description: The timestamp of the post when it was edited in ISO format
+    urgency:
+      $ref: "#/components/schemas/Urgency"
     user:
       type: object
       properties:
         uid:
-          type: number
-          description: A user identifier
+          type: string
+          description: The user id of the post
         username:
           type: string
-          description: A friendly name for a given user account
-        displayname:
-          type: string
-          description: This is either username or fullname depending on forum and user settings
+          description: The username of the post
         userslug:
           type: string
-          description: An URL-safe variant of the username (i.e. lower-cased, spaces
-            removed, etc.)
+          description: The userslug of the post
         picture:
           type: string
-          nullable: true
+          description: The picture of the post
+        rol:
+          type: string
+          description: The role of the post
         status:
           type: string
-        icon:text:
+          description: The status of the post
+        fullname:
           type: string
-          description: A single-letter representation of a username. This is used in the
-            auto-generated icon given to users without
-            an avatar
-        icon:bgColor:
-          type: string
-          description: A six-character hexadecimal colour code assigned to the user. This
-            value is used in conjunction with
-            `icon:text` for the user's auto-generated
-            icon
-          example: "#f44336"
-    topic:
-      type: object
-      properties:
-        uid:
-          type: number
-          description: A user identifier
-        tid:
-          type: number
-          description: A topic identifier
-        title:
-          type: string
-        cid:
-          type: number
-          description: A category identifier
-        slug:
-          type: string
-        deleted:
-          type: number
-        scheduled:
-          type: number
-        timestamp:
-          type: number
-        timestampISO:
-          type: string
-          description: An ISO 8601 formatted date string (complementing `timestamp`)
-        postcount:
-          type: number
-        mainPid:
-          type: number
-          description: The post id of the first post in this topic (also called the
-            "original post")
-        teaserPid:
-          type: number
-          description: The post id of the teaser (the most recent post, depending on settings)
-          nullable: true
-        titleRaw:
-          type: string
-        oldTitle:
-          type: string
-        isMainPost:
-          type: boolean
-        renamed:
-          type: boolean
-        tags:
-          type: array
-          items:
-            $ref: ../../components/schemas/TagObject.yaml#/TagObject
-      required:
-        - uid
-        - tid
-        - cid
-        - title
-        - slug
-    category:
-      type: object
-      properties:
-        cid:
-          type: number
-          description: A category identifier
-        name:
-          type: string
-        icon:
-          type: string
-        slug:
-          type: string
-        parentCid:
-          type: number
-          description: The category identifier for the category that is the immediate
-            ancestor of the current category
-        bgColor:
-          type: string
-        color:
-          type: string
-        backgroundImage:
-          nullable: true
-        imageClass:
-          nullable: true
-          type: string
-    isMainPost:
+          description: The fullname of the post
+    url:
+      type: string
+      description: The url of the post
+    upvoted:
       type: boolean
-    replies:
-      type: number
+      description: If the post has been upvoted
+    downvoted:
+      type: boolean
+      description: If the post has been downvoted

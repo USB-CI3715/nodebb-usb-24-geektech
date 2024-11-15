@@ -1,0 +1,87 @@
+Urgency:
+  description: Urgency object
+  type: object
+  properties:
+    urg_id:
+      type: string
+      description: The urgency id of the post
+    name:
+      type: string
+      description: The name of the urgency
+    description:
+      type: string
+      description: The description of the urgency
+    descriptionParsed:
+      type: string
+      description: The parsed description of the urgency
+    icon:
+      type: string
+      description: The icon of the urgency
+    bgColor:
+      type: string
+      description: The background color of the urgency
+    color:
+      type: string
+      description: The color of the urgency
+    slug:
+      type: string
+      description: The slug of the urgency
+    parentUrgid:
+      type: string
+      description: The parent urgency id of the urgency
+    topic_count:
+      type: integer
+      description: The number of topics the urgency has
+    post_count:
+      type: integer
+      description: The number of posts the urgency has
+    disabled:
+      type: integer
+      description: The status of the urgency if it is disabled or not (0 or 1)
+    order:
+      type: integer
+      description: The order of the urgency
+    link:
+      type: string
+      description: The link of the urgency
+    numRecentReplies:
+      type: integer
+      description: The number of recent replies the urgency has
+    class:
+      type: string
+      description: The class of the urgency
+    imageClass:
+      type: string
+      description: The image class of the urgency
+    isSection:
+      type: integer
+      description: The status of the urgency if it is a section or not (0 or 1)
+    subCategoriesPerPage:
+      type: integer
+      description: The number of subcategories per page the urgency has
+    minTags:
+      type: integer
+      description: The minimum number of tags the urgency has
+    maxTags:
+      type: integer
+      description: The maximum number of tags the urgency has
+    postQueue:
+      type: integer
+      description: The status of the urgency if it is in the post queue or not (0 or 1)
+    cid:
+      type: integer
+      description: The category id of the urgency
+    parentCid:
+      type: integer
+      description: The parent category id of the urgency
+    totalPostCount:
+      type: integer
+      description: The total number of posts the urgency has
+    totalTopicCount:
+      type: integer
+      description: The total number of topics the urgency has
+    tagWhitelist:
+      type: array
+      description: The tag whitelist of the urgency
+      items:
+        type: string
