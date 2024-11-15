@@ -44,11 +44,6 @@ module.exports = function (User) {
 	async function create(data) {
 		const timestamp = data.timestamp || Date.now();
 
-		// If no rol is provided, throw an error
-		if (!data.rol) {
-			throw new Error('No hay rol', JSON.stringify(data));
-		}
-
 		// Include the rol in the user data
 		let userData = {
 			username: data.username,

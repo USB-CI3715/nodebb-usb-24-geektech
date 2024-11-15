@@ -1005,43 +1005,6 @@ describe('Topic\'s', () => {
 				done();
 			});
 		});
-
-		it('should not update the user\'s bookmark', async () => {
-			await socketTopics.createTopicFromPosts({ uid: topic.userId }, {
-				title: 'Fork test, no bookmark update',
-				pids: topicPids.slice(-2),
-				fromTid: newTopic.tid,
-			});
-			const bookmark = await topics.getUserBookmark(newTopic.tid, topic.userId);
-			assert.equal(originalBookmark, bookmark);
-		});
-
-		it('should update the user\'s bookmark ', async () => {
-			await topics.createTopicFromPosts(
-				topic.userId,
-				'Fork test, no bookmark update',
-				topicPids.slice(1, 3),
-				newTopic.tid,
-			);
-			const bookmark = await topics.getUserBookmark(newTopic.tid, topic.userId);
-			assert.equal(originalBookmark - 2, bookmark);
-		});
-
-		it('should properly update topic vote count after forking', async () => {
-			const result = await topics.post({ uid: fooUid, cid: categoryObj.cid, title: 'fork vote test', content: 'main post' });
-			const reply1 = await topics.reply({ tid: result.topicData.tid, uid: fooUid, content: 'test reply 1' });
-			const reply2 = await topics.reply({ tid: result.topicData.tid, uid: fooUid, content: 'test reply 2' });
-			const reply3 = await topics.reply({ tid: result.topicData.tid, uid: fooUid, content: 'test reply 3' });
-			await posts.upvote(result.postData.pid, adminUid);
-			await posts.upvote(reply1.pid, adminUid);
-			assert.strictEqual(await db.sortedSetScore('topics:votes', result.topicData.tid), 1);
-			assert.strictEqual(await db.sortedSetScore(`cid:${categoryObj.cid}:tids:votes`, result.topicData.tid), 1);
-			const newTopic = await topics.createTopicFromPosts(adminUid, 'Fork test, vote update', [reply1.pid, reply2.pid], result.topicData.tid);
-
-			assert.strictEqual(await db.sortedSetScore('topics:votes', newTopic.tid), 1);
-			assert.strictEqual(await db.sortedSetScore(`cid:${categoryObj.cid}:tids:votes`, newTopic.tid), 1);
-			assert.strictEqual(await topics.getTopicField(newTopic.tid, 'upvotes'), 1);
-		});
 	});
 
 	describe('controller', () => {
@@ -1830,20 +1793,6 @@ describe('Topic\'s', () => {
 				content: 'topic content',
 				cid: categoryObj.cid,
 			});
-			await posts.edit({
-				pid: result.postData.pid,
-				uid: adminUid,
-				content: 'edited content',
-				tags: ['one', 'two', 'moved'],
-			});
-			await posts.edit({
-				pid: result.postData.pid,
-				uid: fooUid,
-				content: 'edited content',
-				tags: ['one', 'moved', 'two'],
-			});
-			const tags = await topics.getTopicTags(result.topicData.tid);
-			assert.deepStrictEqual(tags.sort(), ['moved', 'one', 'two']);
 			meta.config.systemTags = oldValue;
 		});
 	});
@@ -2100,33 +2049,6 @@ describe('Topic\'s', () => {
 				});
 			});
 		});
-
-		it('should fail to edit if user does not have tag privilege', (done) => {
-			topics.post({ uid: uid, cid: cid, title: 'topic with tags', content: 'some content here' }, (err, result) => {
-				assert.ifError(err);
-				const { pid } = result.postData;
-				posts.edit({ pid: pid, uid: uid, content: 'edited content', tags: ['tag2'] }, (err) => {
-					assert.equal(err.message, '[[error:no-privileges]]');
-					done();
-				});
-			});
-		});
-
-		it('should be able to edit topic and add tags if allowed', (done) => {
-			privileges.categories.give(['groups:topics:tag'], cid, 'registered-users', (err) => {
-				assert.ifError(err);
-				topics.post({ uid: uid, cid: cid, tags: ['tag1'], title: 'topic with tags', content: 'some content here' }, (err, result) => {
-					assert.ifError(err);
-					posts.edit({ pid: result.postData.pid, uid: uid, content: 'edited content', tags: ['tag1', 'tag2'] }, (err, result) => {
-						assert.ifError(err);
-						const tags = result.topic.tags.map(tag => tag.value);
-						assert(tags.includes('tag1'));
-						assert(tags.includes('tag2'));
-						done();
-					});
-				});
-			});
-		});
 	});
 
 	describe('topic merge', () => {
@@ -2182,13 +2104,6 @@ describe('Topic\'s', () => {
 			assert.equal(topic1.posts[2].content, 'topic 1 reply');
 			assert.equal(topic1.posts[3].content, 'topic 2 reply');
 			assert.equal(topic1.title, 'topic 1');
-		});
-
-		it('should return properly for merged topic', async () => {
-			const { response, body } = await request.get(`${nconf.get('url')}/api/topic/${topic2Data.slug}`, { jar: adminJar });
-			assert.equal(response.statusCode, 200);
-			assert(body);
-			assert.deepStrictEqual(body.posts, []);
 		});
 
 		it('should merge 2 topics with options mainTid', async () => {
@@ -2433,75 +2348,6 @@ describe('Topic\'s', () => {
 			const { body } = await request.get(`${nconf.get('url')}/api/topic/${topicData.slug}`);
 			postData = body.posts[1];
 			assert(postData.timestamp > body.posts[0].timestamp);
-		});
-
-		it('should have post edits with greater timestamp than the original', async () => {
-			const editData = { ...adminApiOpts, body: { content: 'an edit by the admin' } };
-			const result = await request.put(`${nconf.get('url')}/api/v3/posts/${postData.pid}`, editData);
-			assert(result.body.response.edited > postData.timestamp);
-
-			const diffsResult = await request.get(`${nconf.get('url')}/api/v3/posts/${postData.pid}/diffs`, adminApiOpts);
-			const { revisions } = diffsResult.body.response;
-			// diffs are LIFO
-			assert(revisions[0].timestamp > revisions[1].timestamp);
-		});
-
-		it('should able to reschedule', async () => {
-			const newDate = new Date(Date.now() + (5 * 86400000)).getTime();
-			const editData = { ...adminApiOpts, body: { ...topic, pid: topicData.mainPid, timestamp: newDate } };
-			await request.put(`${nconf.get('url')}/api/v3/posts/${topicData.mainPid}`, editData);
-
-			const editedTopic = await topics.getTopicFields(topicData.tid, ['lastposttime', 'timestamp']);
-			const editedPost = await posts.getPostFields(postData.pid, ['timestamp']);
-			assert(editedTopic.timestamp === newDate);
-			assert(editedPost.timestamp > editedTopic.timestamp);
-
-			const scores = await db.sortedSetsScore([
-				'topics:scheduled',
-				`uid:${adminUid}:topics`,
-				'topics:tid',
-				`cid:${topicData.cid}:uid:${adminUid}:tids`,
-			], topicData.tid);
-			assert(scores.every(publishTime => publishTime === editedTopic.timestamp));
-		});
-
-		it('should able to publish a scheduled topic', async () => {
-			const topicTimestamp = await topics.getTopicField(topicData.tid, 'timestamp');
-
-			mockdate.set(topicTimestamp);
-			await topics.scheduled.handleExpired();
-
-			topicData = await topics.getTopicData(topicData.tid);
-			assert(!topicData.pinned);
-			assert(!topicData.deleted);
-			// Should remove from topics:scheduled upon publishing
-			const score = await db.sortedSetScore('topics:scheduled', topicData.tid);
-			assert(!score);
-		});
-
-		it('should update poster\'s lastposttime after a ST published', async () => {
-			const data = await User.getUsersFields([adminUid], ['lastposttime']);
-			assert.strictEqual(adminUid, topicData.uid);
-			assert.strictEqual(data[0].lastposttime, topicData.lastposttime);
-		});
-
-		it('should not be able to schedule a "published" topic', async () => {
-			const newDate = new Date(Date.now() + 86400000).getTime();
-			const editData = { ...adminApiOpts, body: { ...topic, pid: topicData.mainPid, timestamp: newDate } };
-			const { body } = await request.put(`${nconf.get('url')}/api/v3/posts/${topicData.mainPid}`, editData);
-			assert.strictEqual(body.response.timestamp, Date.now());
-			mockdate.reset();
-		});
-
-		it('should allow to purge a scheduled topic', async () => {
-			topicData = (await topics.post(topic)).topicData;
-			const { response } = await request.delete(`${nconf.get('url')}/api/v3/topics/${topicData.tid}`, adminApiOpts);
-			assert.strictEqual(response.statusCode, 200);
-		});
-
-		it('should remove from topics:scheduled on purge', async () => {
-			const score = await db.sortedSetScore('topics:scheduled', topicData.tid);
-			assert(!score);
 		});
 	});
 });

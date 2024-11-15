@@ -19,34 +19,55 @@ require('./ajaxify');
 
 app = window.app || {};
 
-const select = document.querySelectorAll('.urgency-select');
-if (select && select.length) {
-	select.forEach((el) => {
-		el.addEventListener('change', async (e) => {
-			const pid = parseInt(e.target.getAttribute('data-pid'), 10);
-			const uid = parseInt(e.target.getAttribute('data-uid'), 10);
-			const { content } = (await fetch(`/api/v3/posts/${pid}`).then(res => res.json())).response;
-			const urg_id = e.target.value;
 
-			const { csrf_token } = await fetch('/api/config').then(res => res.json());
-
-			const data = {
-				urg_id,
-				content: content,
-				uid,
-				pid,
-			};
-
-			await fetch(`/api/v3/posts/${pid}`, {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json',
-					'x-csrf-token': csrf_token,
-				},
-				body: JSON.stringify(data),
-			});
+async function renderUrgencies(selects) {
+	const urgencies = await fetch('/api/urgency').then(res => res.json());
+	selects.forEach(async (select) => {
+		const pid = parseInt(select.getAttribute('data-pid'), 10);
+		const { urg_id } = (await fetch(`/api/v3/posts/${pid}`).then(res => res.json())).response;
+		urgencies.forEach((urgency) => {
+			const option = document.createElement('option');
+			option.value = urgency.urg_id;
+			option.text = urgency.name;
+			option.selected = urgency.urg_id === urg_id;
+			select.appendChild(option);
 		});
 	});
+}
+
+async function loadUrgencies() {
+	const select = document.querySelectorAll('.urgency-select');
+
+	await renderUrgencies(select);
+
+	if (select && select.length) {
+		select.forEach((el) => {
+			el.addEventListener('change', async (e) => {
+				const pid = parseInt(e.target.getAttribute('data-pid'), 10);
+				const uid = parseInt(e.target.getAttribute('data-uid'), 10);
+				const { content } = (await fetch(`/api/v3/posts/${pid}`).then(res => res.json())).response;
+				const urg_id = e.target.value;
+
+				const { csrf_token } = await fetch('/api/config').then(res => res.json());
+
+				const data = {
+					urg_id,
+					content: content,
+					uid,
+					pid,
+				};
+
+				await fetch(`/api/v3/posts/${pid}`, {
+					method: 'PUT',
+					headers: {
+						'Content-Type': 'application/json',
+						'x-csrf-token': csrf_token,
+					},
+					body: JSON.stringify(data),
+				});
+			});
+		});
+	}
 }
 
 Object.defineProperty(app, 'isFocused', {
@@ -123,28 +144,117 @@ if (document.readyState === 'loading') {
 	};
 	app.handleEarlyClicks();
 
+	// Función que se ejecuta cuando se detectan cambios en el DOM
 	const observer = new MutationObserver(function (mutations) {
 		mutations.forEach(async function () {
+			// En las vistas de categorías y de inicio, ocultar categorías de orden 1 si el usuario no es profesor
 			if (window.location.pathname === '/' || window.location.pathname.endsWith('/categories')) {
 				const userRole = app.user.rol;
+
+				// Ocultar categorías de orden 1 si el usuario no es profesor
 				const categories = document.querySelectorAll('[data-order]');
 				categories.forEach((category) => {
 					if (category.getAttribute('data-order') === '1' && userRole !== 'professor') {
 						category.remove();
 					}
+					if (category.getAttribute('data-order') === '1') {
+						const lastPostDiv = category.querySelector('.lastpost.border-start.border-2.lh-sm.h-100');
+						if (lastPostDiv) {
+							lastPostDiv.style.display = 'none';
+						}
+					}
 				});
 			}
+			// En la vista de preguntas urgentes
 			if (window.location.pathname.endsWith('/urgent-questions')) {
-				const button = document.getElementById('new_topic');
-				if (button) button.style.display = 'none';
-				// const { csrf_token, uid } = await fetch('/api/config').then(res => res.json());
+				// Ocultar badges de estadísticas que no hacen falta en la vista de preguntas urgentes
+				const badges = document.querySelectorAll('.badge.text-body.border.border-gray-300.stats.text-xs');
+				badges.forEach((badge) => {
+					badge.style.display = 'none';
+				});
+
+				// Ocultar herramientas fijas
+				const stickyTools = document.querySelector('div.sticky-tools.mb-3');
+				if (stickyTools) {
+					stickyTools.style.display = 'none';
+				}
 			}
 		});
 	});
+	// Observar cambios en el DOM
 	observer.observe(document.body, {
 		childList: true,
 		subtree: true,
 	});
+
+	// Función que renderiza las preguntas urgentes en la vista de preguntas urgentes
+	function renderPosts(posts) {
+		const container = document.getElementById('category-no-topics');
+		if (posts && container) {
+			// Si no hay preguntas urgentes, mostrar mensaje
+			if (posts.length === 0) {
+				container.className = 'bg-light p-4 rounded text-center text-muted mt-4 mb-4 border';
+				container.innerHTML = `
+					<strong>\nNo urgent questions found!\n</strong>
+					<p>There are no urgent questions at the moment. Please stay tuned and check back later.</p>
+				`;
+				// Si hay preguntas urgentes, mostrarlas
+			} else {
+				// Limpiar el contenedor de preguntas del template
+				container.innerHTML = '';
+				container.className = '';
+				// Renderizar cada pregunta
+				posts.forEach((post) => {
+					console.log(post);
+					const postElement = document.createElement('div');
+					postElement.className = `post p-4 mb-3 border border-3 rounded text-break ${post.urgency.bgColor}`;
+					postElement.style = '--bs-bg-opacity: .10;';
+
+					// Determinar la cantidad de iconos a mostrar segun el tipo de urgencia
+					let icons = '';
+					if (post.urgency.urg_id === '2') {
+						icons = '<i class="fa fa-fw fa-fire" data-content="" ></i>'.repeat(3);
+					} else if (post.urgency.urg_id === '3') {
+						icons = '<i class="fa fa-fw fa-fire" data-content=""></i>'.repeat(2);
+					} else if (post.urgency.urg_id === '4') {
+						icons = '<i class="fa fa-fw fa-fire" data-content=""></i>';
+					}
+
+					// Renderizar el contenido de la pregunta
+					postElement.innerHTML = `
+						<div class="d-flex justify-content-between align-items-center">
+							<p class="text-break mb-0">
+								<strong>Urgency:</strong> ${post.urgency.name}
+								${icons}
+							</p>
+							<button class="btn btn-primary ${post.urgency.bgColor}" onclick="window.location.href='${post.url}'">View post on thread &#8680;</button>
+						</div>
+						<hr class="my-2 ${post.urgency.bgColor}"> <!-- Divider de Bootstrap -->
+						<p class="text-break">${post.content}</p>
+						<div class="d-flex justify-content-end">
+                        	<small class="text-muted p-2"><strong>Posted by:</strong> @${post.user.username}, <strong>role:</strong> ${post.user.rol}</small>
+                    	</div>
+					`;
+					container.appendChild(postElement);
+				});
+			}
+		}
+	}
+
+	// Función que se ejecuta al cargar la vista de preguntas urgentes para obtener las preguntas urgentes
+	async function loadUrgentQuestions() {
+		if (window.location.pathname.endsWith('/urgent-questions')) {
+			const { csrf_token, uid } = await fetch('/api/config').then(res => res.json());
+
+			const { response: posts } = await fetch(`/api/v3/posts/${uid}/unanswered/0`, {
+				method: 'GET',
+				headers: {
+					'x-csrf-token': csrf_token,
+				},
+			}).then(res => res.json());
+			renderPosts(posts);
+		}
+	}
 
 	app.load = function () {
 		$('body').on('click', '#new_topic', function (e) {
@@ -176,6 +286,8 @@ if (document.readyState === 'loading') {
 	};
 
 	app.require = async function (modules) {
+		await loadUrgencies();
+		await loadUrgentQuestions();
 		const single = !Array.isArray(modules);
 		if (single) {
 			modules = [modules];

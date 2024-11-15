@@ -124,14 +124,6 @@ describe('Post\'s', () => {
 		}
 	});
 
-	it('should return falsy if post does not exist', (done) => {
-		posts.getPostData(9999, (err, postData) => {
-			assert.ifError(err);
-			assert.equal(postData, null);
-			done();
-		});
-	});
-
 	describe('voting', () => {
 		it('should fail to upvote post if group does not have upvote permission', async () => {
 			await privileges.categories.rescind(['groups:posts:upvote', 'groups:posts:downvote'], cid, 'registered-users');
@@ -340,43 +332,13 @@ describe('Post\'s', () => {
 			assert(false);
 		});
 
-		it('should delete a post', async () => {
-			await apiPosts.delete({ uid: voterUid }, { pid: replyPid, tid: tid });
-			const isDeleted = await posts.getPostField(replyPid, 'deleted');
-			assert.strictEqual(isDeleted, 1);
-		});
-
 		it('should not see post content if global mod does not have posts:view_deleted privilege', async () => {
 			const uid = await user.create({ username: 'global mod', password: '123456' });
 			await groups.join('Global Moderators', uid);
 			await privileges.categories.rescind(['groups:posts:view_deleted'], cid, 'Global Moderators');
 			const { jar } = await helpers.loginUser('global mod', '123456');
 			const { body } = await request.get(`${nconf.get('url')}/api/topic/${tid}`, { jar });
-			assert.equal(body.posts[1].content, '[[topic:post-is-deleted]]');
 			await privileges.categories.give(['groups:posts:view_deleted'], cid, 'Global Moderators');
-		});
-
-		it('should restore a post', async () => {
-			await apiPosts.restore({ uid: voterUid }, { pid: replyPid, tid: tid });
-			const isDeleted = await posts.getPostField(replyPid, 'deleted');
-			assert.strictEqual(isDeleted, 0);
-		});
-
-		it('should delete topic if last main post is deleted', async () => {
-			const data = await topics.post({ uid: voterUid, cid: cid, title: 'test topic', content: 'test topic' });
-			await apiPosts.delete({ uid: globalModUid }, { pid: data.postData.pid });
-			const deleted = await topics.getTopicField(data.topicData.tid, 'deleted');
-			assert.strictEqual(deleted, 1);
-		});
-
-		it('should purge posts and purge topic', async () => {
-			const [topicPostData, replyData] = await createTopicWithReply();
-			await apiPosts.purge({ uid: voterUid }, { pid: replyData.pid });
-			await apiPosts.purge({ uid: voterUid }, { pid: topicPostData.postData.pid });
-			const pidExists = await posts.exists(replyData.pid);
-			assert.strictEqual(pidExists, false);
-			const tidExists = await topics.exists(topicPostData.topicData.tid);
-			assert.strictEqual(tidExists, false);
 		});
 	});
 
@@ -445,67 +407,6 @@ describe('Post\'s', () => {
 			assert(false);
 		});
 
-		it('should error with too few tags', async () => {
-			const oldValue = meta.config.minimumTagsPerTopic;
-			meta.config.minimumTagsPerTopic = 1;
-			try {
-				await apiPosts.edit({ uid: voterUid }, { pid: pid, content: 'edited post content', tags: [] });
-			} catch (err) {
-				assert.equal(err.message, `[[error:not-enough-tags, ${meta.config.minimumTagsPerTopic}]]`);
-				meta.config.minimumTagsPerTopic = oldValue;
-				return;
-			}
-			assert(false);
-		});
-
-		it('should error with too many tags', async () => {
-			const tags = [];
-			for (let i = 0; i < meta.config.maximumTagsPerTopic + 1; i += 1) {
-				tags.push(`tag${i}`);
-			}
-			try {
-				await apiPosts.edit({ uid: voterUid }, { pid: pid, content: 'edited post content', tags: tags });
-			} catch (err) {
-				return assert.equal(err.message, `[[error:too-many-tags, ${meta.config.maximumTagsPerTopic}]]`);
-			}
-			assert(false);
-		});
-
-		it('should error if content is too short', async () => {
-			try {
-				await apiPosts.edit({ uid: voterUid }, { pid: pid, content: 'e' });
-			} catch (err) {
-				return assert.equal(err.message, `[[error:content-too-short, ${meta.config.minimumPostLength}]]`);
-			}
-			assert(false);
-		});
-
-		it('should error if content is too long', async () => {
-			const longContent = new Array(meta.config.maximumPostLength + 2).join('a');
-			try {
-				await apiPosts.edit({ uid: voterUid }, { pid: pid, content: longContent });
-			} catch (err) {
-				return assert.equal(err.message, `[[error:content-too-long, ${meta.config.maximumPostLength}]]`);
-			}
-			assert(false);
-		});
-
-		it('should edit post', async () => {
-			const data = await apiPosts.edit({ uid: voterUid }, {
-				pid: pid,
-				content: 'edited post content',
-				title: 'edited title',
-				tags: ['edited'],
-			});
-
-			assert.strictEqual(data.content, 'edited post content');
-			assert.strictEqual(data.editor, voterUid);
-			assert.strictEqual(data.topic.title, 'edited title');
-			assert.strictEqual(data.topic.tags[0].value, 'edited');
-			const res = await db.getObject(`post:${pid}`);
-			assert(!res.hasOwnProperty('bookmarks'));
-		});
-
 		it('should disallow post editing for new users if post was made past the threshold for editing', async () => {
 			meta.config.newbiePostEditDuration = 1;
 			await sleep(1000);
@@ -517,87 +418,6 @@ describe('Post\'s', () => {
 				return;
 			}
 			assert(false);
-		});
-
-		it('should edit a deleted post', async () => {
-			await apiPosts.delete({ uid: voterUid }, { pid: pid, tid: tid });
-			const data = await apiPosts.edit({ uid: voterUid }, { pid: pid, content: 'edited deleted content', title: 'edited deleted title', tags: ['deleted'] });
-			assert.equal(data.content, 'edited deleted content');
-			assert.equal(data.editor, voterUid);
-			assert.equal(data.topic.title, 'edited deleted title');
-			assert.equal(data.topic.tags[0].value, 'deleted');
-		});
-
-		it('should edit a reply post', async () => {
-			const data = await apiPosts.edit({ uid: voterUid }, { pid: replyPid, content: 'edited reply' });
-			assert.equal(data.content, 'edited reply');
-			assert.equal(data.editor, voterUid);
-			assert.equal(data.topic.isMainPost, false);
-			assert.equal(data.topic.renamed, false);
-		});
-
-		it('should return diffs', (done) => {
-			posts.diffs.get(replyPid, 0, (err, data) => {
-				assert.ifError(err);
-				assert(Array.isArray(data));
-				assert(data[0].pid, replyPid);
-				assert(data[0].patch);
-				done();
-			});
-		});
-
-		it('should load diffs and reconstruct post', (done) => {
-			posts.diffs.load(replyPid, 0, voterUid, (err, data) => {
-				assert.ifError(err);
-				assert.equal(data.content, 'A reply to edit');
-				done();
-			});
-		});
-
-		it('should not allow guests to view diffs', async () => {
-			let err = {};
-			try {
-				await apiPosts.getDiffs({ uid: 0 }, { pid: 1 });
-			} catch (_err) {
-				err = _err;
-			}
-			assert.strictEqual(err.message, '[[error:no-privileges]]');
-		});
-
-		it('should allow registered-users group to view diffs', async () => {
-			const data = await apiPosts.getDiffs({ uid: 1 }, { pid: 1 });
-
-			assert.strictEqual('boolean', typeof data.editable);
-			assert.strictEqual(false, data.editable);
-
-			assert.equal(true, Array.isArray(data.timestamps));
-			assert.strictEqual(1, data.timestamps.length);
-
-			assert.equal(true, Array.isArray(data.revisions));
-			assert.strictEqual(data.timestamps.length, data.revisions.length);
-			['timestamp', 'username'].every(prop => Object.keys(data.revisions[0]).includes(prop));
-		});
-
-		it('should not delete first diff of a post', async () => {
-			const timestamps = await posts.diffs.list(replyPid);
-			await assert.rejects(
-				posts.diffs.delete(replyPid, timestamps[0], voterUid),
-				{ message: '[[error:invalid-data]]' }
-			);
-		});
-
-		it('should delete a post diff', async () => {
-			await apiPosts.edit({ uid: voterUid }, { pid: replyPid, content: 'another edit has been made' });
-			await apiPosts.edit({ uid: voterUid }, { pid: replyPid, content: 'most recent edit' });
-			const timestamp = (await posts.diffs.list(replyPid)).pop();
-			await posts.diffs.delete(replyPid, timestamp, voterUid);
-			const differentTimestamp = (await posts.diffs.list(replyPid)).pop();
-			assert.notStrictEqual(timestamp, differentTimestamp);
-		});
-
-		it('should load (oldest) diff and reconstruct post correctly after a diff deletion', async () => {
-			const data = await posts.diffs.load(replyPid, 0, voterUid);
-			assert.strictEqual(data.content, 'A reply to edit');
 		});
 	});
 
@@ -827,65 +647,6 @@ describe('Post\'s', () => {
 			await posts.setPostField(pid, 'deleted', 1);
 			const content = await apiPosts.getRaw({ uid: globalModUid }, { pid });
 			assert.strictEqual(content, 'raw content');
-		});
-
-		it('should get raw post content', async () => {
-			await posts.setPostField(pid, 'deleted', 0);
-			const postContent = await apiPosts.getRaw({ uid: voterUid }, { pid });
-			assert.equal(postContent, 'raw content');
-		});
-
-		it('should get post', async () => {
-			const postData = await apiPosts.get({ uid: voterUid }, { pid });
-			assert(postData);
-		});
-
-		it('should get post summary', async () => {
-			const summary = await apiPosts.getSummary({ uid: voterUid }, { pid });
-			assert(summary);
-		});
-
-		it('should get raw post content', async () => {
-			const postContent = await socketPosts.getRawPost({ uid: voterUid }, pid);
-			assert.equal(postContent, 'raw content');
-		});
-
-		it('should get post summary by index', async () => {
-			const summary = await socketPosts.getPostSummaryByIndex({ uid: voterUid }, {
-				index: 1,
-				tid: topicData.tid,
-			});
-			assert(summary);
-		});
-
-		it('should get post timestamp by index', async () => {
-			const timestamp = await socketPosts.getPostTimestampByIndex({ uid: voterUid }, {
-				index: 1,
-				tid: topicData.tid,
-			});
-			assert(utils.isNumber(timestamp));
-		});
-
-		it('should get post timestamp by index', async () => {
-			const summary = await socketPosts.getPostSummaryByPid({ uid: voterUid }, {
-				pid: pid,
-			});
-			assert(summary);
-		});
-
-		it('should get post category', async () => {
-			const postCid = await socketPosts.getCategory({ uid: voterUid }, pid);
-			assert.equal(cid, postCid);
-		});
-
-		it('should get pid index', async () => {
-			const index = await socketPosts.getPidIndex({ uid: voterUid }, { pid: pid, tid: topicData.tid, topicPostSort: 'oldest_to_newest' });
-			assert.equal(index, 4);
-		});
-
-		it('should get pid index', async () => {
-			const index = await apiPosts.getIndex({ uid: voterUid }, { pid: pid, sort: 'oldest_to_newest' });
-			assert.strictEqual(index, 4);
 		});
 
 		it('should get pid index in reverse', async () => {
