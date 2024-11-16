@@ -32,6 +32,8 @@ describe('Post\'s', () => {
 	let postData;
 	let topicData;
 	let cid;
+	let studentUid;
+	let professorUid;
 
 	before(async () => {
 		voterUid = await user.create({ username: 'upvoter' });
@@ -49,6 +51,11 @@ describe('Post\'s', () => {
 			content: 'The content of test topic',
 		}));
 		await groups.join('Global Moderators', globalModUid);
+
+		// Create a student user
+		studentUid = await user.create({ username: 'student', password: 'studentpwd', rol: 'student' });
+		// Create a professor user
+		professorUid = await user.create({ username: 'professor', password: 'professorpwd', rol: 'professor' });
 	});
 
 	it('should update category teaser properly', async () => {
@@ -959,6 +966,67 @@ describe('Post\'s', () => {
 				assert(events);
 				assert.strictEqual(events.length, 0);
 			});
+		});
+	});
+
+	describe('Urgency', () => {
+		let tid;
+		let pid;
+		before(async () => {
+			tid = await topics.post({
+				uid: 1,
+				cid,
+				title: 'Urgency testing and its effects on the post',
+				content: 'Some text here for the OP',
+			});
+			pid = await topics.post({ uid: 1, cid: cid, title: 'hi this is a post for testing', content: 'original post' });
+		});
+
+		// Test to get the urgency of a post
+		it('should get urgency', async () => {
+			const urgency = pid.postData.urg_id;
+			assert.strictEqual(urgency, 1);
+		});
+
+		// Test to update the urgency of a post
+		it('should update urgency', async () => {
+			await posts.setPostField(pid.postData.pid, 'urg_id', 2);
+			const urgency = await posts.getPostField(pid.postData.pid, 'urg_id');
+			assert.strictEqual(urgency, '2');
+		});
+
+		// Test to get all urgent posts
+		it('should get all urgent posts', async () => {
+			const urgentPosts = await posts.getUrgentPosts(voterUid);
+			assert(Array.isArray(urgentPosts));
+			assert(urgentPosts.length > 0);
+		});
+	});
+
+	describe('Answered', () => {
+		let tid;
+		let pid;
+		before(async () => {
+			tid = await topics.post({
+				uid: 1,
+				cid,
+				title: 'Answered testing and its effects on the post',
+				content: 'Some text here for the OP',
+			});
+			pid = await topics.post({ uid: 1, cid: cid, title: 'hi this is a post for testing', content: 'original post' });
+		});
+
+		// Test to get the answered status of a post
+		it('should get answered status', async () => {
+			const { answered } = pid.postData;
+			assert.strictEqual(answered, false);
+		});
+
+		// Test to update the answered status of a post
+		it('should update answered status', async () => {
+			await posts.setPostField(pid.postData.pid, 'answered', 1);
+			const answered = await posts.getPostField(pid.postData.pid, 'answered');
+			assert.strictEqual(answered, 1);
 		});
 	});
 });
