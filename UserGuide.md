@@ -92,16 +92,16 @@ Luego de crear una pregunta, el usuario tiene la opción de marcar la pregunta c
 
 #### Capturas de pantalla
 
-
+![alt text](readme_imgs/contestada.png)
 
 #### Instrucciones
 
 Para marcar una pregunta como contestada, se debe seguir los siguientes pasos:
 
 1. Seleccionar un tema en el foro.
-
-
-
+2. Escoger la opción "Reply" en la pregunta que se desea responder.
+3. Responder la pregunta.
+4. Se marcará la pregunta como contestada automáticamente.
 
 ### Feature 4 - Tab adicional con preguntas urgentes
 
