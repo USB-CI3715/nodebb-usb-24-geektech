@@ -29,6 +29,21 @@
 				<span class="badge bg-secondary ms-1">{posts.user.rol}</span>
 			</a>
 
+			{{{ if equals(posts.user.rol,"student") }}}
+			<button
+				class="btn btn-sm btn-outline-danger"
+				onclick="
+					const btn = this;
+					const isUnanswered = btn.classList.contains('btn-outline-danger');
+					btn.classList.toggle('btn-outline-danger', !isUnanswered);
+					btn.classList.toggle('btn-success', isUnanswered);
+					btn.textContent = isUnanswered ? 'Contestada' : 'Sin contestar';
+				"
+			>
+				Sin contestar
+			</button>
+			{{{ end }}}
+
 
 			{{{ each posts.user.selectedGroups }}}
 			{{{ if posts.user.selectedGroups.slug }}}
@@ -60,6 +75,10 @@
 			
 			<div class="d-flex align-items-center gap-1 flex-grow-1 justify-content-end">
 				<select class="form-select-sm me-2 bg-primary text-white border-0 urgency-select" aria-label="Small select example" data-pid="{./pid}" data-uid="{posts.user.uid}" data-content="{posts.content}">
+					<option value="1" {{{ if equals(posts.urg_id,"1") }}} selected {{{ end }}}>No urgency</option>
+					<option value="2" {{{ if equals(posts.urg_id,"2") }}} selected {{{ end }}}>High</option>
+					<option value="3" {{{ if equals(posts.urg_id,"3") }}} selected {{{ end }}}>Medium</option>
+					<option value="4" {{{ if equals(posts.urg_id,"4") }}} selected {{{ end }}}>Low</option>
 				</select>
 				<span class="bookmarked opacity-0 text-primary"><i class="fa fa-bookmark-o"></i></span>
 				<a href="{config.relative_path}/post/{./pid}" class="post-index text-muted d-none d-md-inline">#{increment(./index, "1")}</a>
