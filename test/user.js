@@ -2698,4 +2698,52 @@ describe('User', () => {
 			});
 		});
 	});
+
+	describe('Role', () => {
+		// Test to create a user with the professor role
+		it('should create a user with the professor role', async () => {
+			const uid = await User.create({
+				username: 'userWithRole', password: '123456', rol: 'professor',
+			});
+			const user = await User.getUserData(uid);
+			assert.strictEqual(user.rol, 'professor');
+		});
+
+		// Test to create a user with the student role
+		it('should create a user with the student role', async () => {
+			const uid = await User.create({
+				username: 'userWithRole', password: 'zxasqw123321', rol: 'student',
+			});
+			const user = await User.getUserData(uid);
+			assert.strictEqual(user.rol, 'student');
+		});
+
+		// Test to get the role of a user
+		it('should get user role', async () => {
+			const uid = await User.create({
+				username: 'userWithRole', password: 'zxasqw123321', rol: 'professor',
+			});
+			const user = await User.getUserData(uid);
+			const { rol } = user;
+			assert.strictEqual(rol, 'professor');
+		});
+
+		// Test to check if a user with the professor role has moderator permissions
+		it('should have moderator permissions if the user has the professor role', async () => {
+			const uid = await User.create({
+				username: 'userWithRole', password: 'zxasqw123321', rol: 'professor',
+			});
+			const hasPermission = await User.isModerator(uid);
+			assert.strictEqual(hasPermission, true);
+		});
+
+		// Test to check if a user with the student role does not have moderator permissions
+		it('should not have moderator permissions if the user has the student role', async () => {
+			const uid = await User.create({
+				username: 'userWithRole', password: 'zxasqw123321', rol: 'student',
+			});
+			const hasPermission = await User.isModerator(uid);
+			assert.strictEqual(hasPermission, false);
+		});
+	});
 });
